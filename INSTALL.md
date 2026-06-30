@@ -23,7 +23,7 @@ git add .
 git commit -m "Initial commit: PasteMe clipboard manager"
 
 # 在 GitHub 上创建仓库后执行（替换为你的用户名）
-git remote add origin https://github.com/YOUR_USERNAME/pasteMe.git
+git remote add origin https://github.com/YOUR_USERNAME/paste-me.git
 git branch -M main
 git push -u origin main
 ```
@@ -117,14 +117,14 @@ chmod +x package-xcode.sh
 | 仅 Command Line Tools | ❌ 不行（缺少 GUI 应用 SDK） |
 | GitHub Actions (macOS) | ✅ 可以（已配置好） |
 
-你当前环境只有 Command Line Tools，因此推荐使用 **方案一**。
+若本地仅有 Command Line Tools（无完整 Xcode），推荐使用 **方案一**。
 
 ---
 
 ## 首次运行注意事项
 
 1. **Gatekeeper**：见上文「无法验证开发者」章节，**右键 → 打开** 即可
-2. **辅助功能权限**：全局快捷键 `⌘⇧V` 需要在 系统设置 → 隐私与安全性 → 辅助功能 中添加 PasteMe
+2. **辅助功能权限**：选择面板的自动粘贴需要在 系统设置 → 隐私与安全性 → 辅助功能 中添加 PasteMe（全局快捷键 `⌘⇧V` 通常无需此权限）
 3. **菜单栏图标**：启动后会在顶部状态栏显示剪贴板图标
 
 ---
