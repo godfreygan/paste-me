@@ -1,0 +1,28 @@
+name: PasteMe
+options:
+  bundleIdPrefix: com.pasteme
+  deploymentTarget:
+    macOS: "15.0"
+  xcodeVersion: "15.0"
+  
+targets:
+  PasteMe:
+    type: application
+    platform: macOS
+    sources:
+      - PasteMe
+    settings:
+      base:
+        INFOPLIST_FILE: PasteMe/Info.plist
+        PRODUCT_BUNDLE_IDENTIFIER: com.pasteme.app
+        PRODUCT_NAME: PasteMe
+        MACOSX_DEPLOYMENT_TARGET: "15.0"
+        SWIFT_VERSION: "5.9"
+        CODE_SIGN_IDENTITY: "-"
+        CODE_SIGN_STYLE: Manual
+        ENABLE_HARDENED_RUNTIME: NO
+        INFOPLIST_KEY_LSUIElement: YES
+    dependencies: []
+    preBuildScripts: []
+    
+packages: {}

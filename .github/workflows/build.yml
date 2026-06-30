@@ -1,0 +1,51 @@
+name: Build PasteMe
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Validate project structure
+        working-directory: PasteMe
+        run: |
+          chmod +x scripts/validate-project.sh
+          ./scripts/validate-project.sh
+
+      - name: Build and package
+        working-directory: PasteMe
+        run: |
+          chmod +x package-xcode.sh
+          ./package-xcode.sh
+
+      - name: Verify artifacts
+        run: |
+          test -d PasteMe/dist/PasteMe.app
+          test -f PasteMe/dist/PasteMe.app/Contents/MacOS/PasteMe
+          test -f PasteMe/dist/PasteMe-1.0.0-macOS.zip
+          file PasteMe/dist/PasteMe.app/Contents/MacOS/PasteMe
+
+      - name: Upload ZIP (install package)
+        uses: actions/upload-artifact@v4
+        with:
+          name: PasteMe-macOS-installer
+          path: PasteMe/dist/PasteMe-1.0.0-macOS.zip
+          retention-days: 90
+
+      - name: Upload App bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: PasteMe-app
+          path: PasteMe/dist/PasteMe.app
+          retention-days: 90

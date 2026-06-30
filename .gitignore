@@ -1,0 +1,10 @@
+.DS_Store
+.build/
+.derivedData/
+dist/
+*.xcuserstate
+xcuserdata/
+Package.resolved
+PasteMe/.build/
+PasteMe/.derivedData/
+PasteMe/dist/
