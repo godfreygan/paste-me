@@ -71,15 +71,32 @@ struct SettingsView: View {
                         }
                     }
 
+                    Text("「选中即粘贴」需要辅助功能权限。macOS 按**应用路径**记录授权；每次从 GitHub 下载新版本后，需重新勾选 PasteMe。")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+
+                    Text("当前路径：\(Bundle.main.bundlePath)")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                        .textSelection(.enabled)
+
                     if !PasteSimulator.isAccessibilityTrusted {
-                        Text("「选中即粘贴」需要辅助功能权限，用于将内容粘贴到光标处。未授权时只会复制到剪贴板。")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                        Button("请求授权…") {
+                            PasteSimulator.requestAccessibilityPermissionIfNeeded()
+                        }
 
                         Button("打开系统设置…") {
                             PasteSimulator.openAccessibilitySettings()
                         }
+                    } else {
+                        Button("打开系统设置…") {
+                            PasteSimulator.openAccessibilitySettings()
+                        }
                     }
+
+                    Text("若系统设置中已勾选但仍无法粘贴：删除列表中的旧 PasteMe 条目 → 重新添加当前路径的应用 → 完全退出并重启 PasteMe。")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                 }
 
                 Section("通用") {
