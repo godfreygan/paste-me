@@ -2,10 +2,10 @@ import SwiftUI
 import AppKit
 
 struct MenuBarView: View {
+    var onPaste: ((ClipItem) -> Void)? = nil
+
     @ObservedObject private var storage = StorageManager.shared
     @State private var searchText = ""
-    @State private var showSettings = false
-    @State private var copiedItemID: UUID? = nil
     
     var filteredClips: [ClipItem] {
         if searchText.isEmpty {
@@ -43,7 +43,7 @@ struct MenuBarView: View {
                         ForEach(pinnedItems) { item in
                             ClipItemRow(
                                 item: item,
-                                onCopy: { copyItem(item) },
+                                onCopy: { pasteItem(item) },
                                 onPin: { storage.togglePin(item) },
                                 onDelete: { storage.deleteClip(item) }
                             )
@@ -58,7 +58,7 @@ struct MenuBarView: View {
                         ForEach(recentItems) { item in
                             ClipItemRow(
                                 item: item,
-                                onCopy: { copyItem(item) },
+                                onCopy: { pasteItem(item) },
                                 onPin: { storage.togglePin(item) },
                                 onDelete: { storage.deleteClip(item) }
                             )
@@ -80,54 +80,17 @@ struct MenuBarView: View {
                     }
                 }
             }
-            
-            Divider()
-            
-            // Bottom Bar
-            HStack {
-                Text("\(storage.clips.filter { !$0.isPinned }.count)/\(storage.settings.maxHistoryCount)")
-                    .font(.system(size: 11))
-                    .foregroundColor(.secondary)
-                
-                Spacer()
-                
-                Button(action: { showSettings = true }) {
-                    Image(systemName: "gear")
-                        .font(.system(size: 13))
-                }
-                .buttonStyle(.plain)
-                
-                Button(action: { storage.clearAllHistory() }) {
-                    Image(systemName: "trash")
-                        .font(.system(size: 13))
-                        .foregroundColor(.red)
-                }
-                .buttonStyle(.plain)
-                .help("清空历史")
-            }
-            .padding(12)
         }
         .frame(width: 320, height: 450)
-        .sheet(isPresented: $showSettings) {
-            SettingsView()
-        }
-        .overlay {
-            if copiedItemID != nil {
-                CopyConfirmationView()
-                    .onAppear {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                            copiedItemID = nil
-                        }
-                    }
-            }
-        }
     }
     
-    private func copyItem(_ item: ClipItem) {
-        ClipboardManager.shared.copyToClipboard(item)
-        copiedItemID = item.id
-        
-        // Play sound feedback
+    private func pasteItem(_ item: ClipItem) {
+        if let onPaste {
+            onPaste(item)
+        } else {
+            ClipboardManager.shared.copyAndPaste(item)
+        }
+
         if storage.settings.playSoundOnCopy {
             NSSound(named: NSSound.Name("Pop"))?.play()
         }
@@ -153,29 +116,5 @@ struct SectionHeader: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
-    }
-}
-
-// MARK: - Copy Confirmation
-
-struct CopyConfirmationView: View {
-    var body: some View {
-        VStack {
-            Spacer()
-            HStack {
-                Spacer()
-                Label("已复制", systemImage: "checkmark.circle.fill")
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    .background(Color.green)
-                    .cornerRadius(20)
-                Spacer()
-            }
-            .padding(.bottom, 20)
-        }
-        .transition(.opacity)
-        .animation(.easeInOut(duration: 0.2), value: true)
     }
 }

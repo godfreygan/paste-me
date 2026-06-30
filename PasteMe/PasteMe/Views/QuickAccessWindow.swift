@@ -83,6 +83,7 @@ class QuickAccessWindowController {
 
         guard let panelWindow, let backdropWindow else { return }
 
+        PasteSimulator.rememberTargetApp()
         positionPanel(panelWindow)
 
         backdropWindow.orderFront(nil)
@@ -167,9 +168,7 @@ class QuickAccessWindowController {
 
     private func selectItem(_ item: ClipItem) {
         hide()
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
-            ClipboardManager.shared.copyAndPaste(item)
-        }
+        ClipboardManager.shared.copyAndPaste(item)
     }
 }
 

@@ -97,7 +97,8 @@ class ClipboardManager: ObservableObject {
     }
 
     func copyAndPaste(_ item: ClipItem) {
-        copyToClipboard(item)
-        PasteSimulator.simulateCommandV()
+        PasteSimulator.performPaste {
+            self.copyToClipboard(item)
+        }
     }
 }

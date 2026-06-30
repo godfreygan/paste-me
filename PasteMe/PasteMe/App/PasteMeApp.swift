@@ -7,7 +7,7 @@ struct PasteMeApp: App {
     var body: some Scene {
         // Menu bar app - no main window needed
         Settings {
-            EmptyView()
+            SettingsView()
         }
     }
 }

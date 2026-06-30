@@ -4,6 +4,7 @@ import SwiftUI
 class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem!
     private var popover: NSPopover!
+    private var contextMenu: NSMenu!
     private let clipboardManager = ClipboardManager.shared
     private let hotkeyManager = HotkeyManager.shared
     
@@ -15,6 +16,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         setupMenuBar()
+        setupContextMenu()
         setupPopover()
         setupHotkey()
         
@@ -27,9 +29,24 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         if let button = statusItem.button {
             button.image = NSImage(systemSymbolName: "clipboard", accessibilityDescription: "PasteMe")
-            button.action = #selector(togglePopover)
+            button.action = #selector(statusItemClicked(_:))
             button.target = self
+            button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         }
+    }
+
+    private func setupContextMenu() {
+        contextMenu = NSMenu()
+
+        let settingsItem = NSMenuItem(title: "设置", action: #selector(openSettings), keyEquivalent: "")
+        settingsItem.target = self
+        contextMenu.addItem(settingsItem)
+
+        contextMenu.addItem(.separator())
+
+        let quitItem = NSMenuItem(title: "退出", action: #selector(quitApp), keyEquivalent: "")
+        quitItem.target = self
+        contextMenu.addItem(quitItem)
     }
     
     private func setupPopover() {
@@ -37,7 +54,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         popover.contentSize = NSSize(width: 320, height: 450)
         popover.behavior = .transient
         popover.animates = true
-        popover.contentViewController = NSHostingController(rootView: MenuBarView())
+        popover.contentViewController = NSHostingController(
+            rootView: MenuBarView(onPaste: { [weak self] item in
+                self?.closePopover()
+                ClipboardManager.shared.copyAndPaste(item)
+            })
+        )
     }
     
     private func setupHotkey() {
@@ -45,6 +67,24 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self?.showQuickAccess()
         }
         hotkeyManager.registerFromSettings()
+    }
+
+    @objc private func statusItemClicked(_ sender: NSStatusBarButton) {
+        guard let event = NSApp.currentEvent else {
+            togglePopover()
+            return
+        }
+
+        if event.type == .rightMouseUp {
+            closePopover()
+            contextMenu.popUp(
+                positioning: nil,
+                at: NSPoint(x: 0, y: sender.bounds.height + 5),
+                in: sender
+            )
+        } else {
+            togglePopover()
+        }
     }
     
     @objc private func togglePopover() {
@@ -57,6 +97,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     private func showPopover() {
         if let button = statusItem.button {
+            PasteSimulator.rememberTargetApp()
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
             
             // Activate app to receive keyboard events
@@ -73,6 +114,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     private func closePopover() {
         popover.performClose(nil)
+    }
+
+    @objc private func openSettings() {
+        closePopover()
+        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+    }
+
+    @objc private func quitApp() {
+        closePopover()
+        NSApp.terminate(nil)
     }
     
     private func showQuickAccess() {
