@@ -276,7 +276,7 @@ struct QuickAccessView: View {
             }
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
-            .onChange(of: selectedIndex) { newIndex in
+            .onChange(of: selectedIndex) { _, newIndex in
                 withAnimation {
                     proxy.scrollTo(newIndex, anchor: .center)
                 }

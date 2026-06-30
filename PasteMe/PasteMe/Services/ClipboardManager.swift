@@ -73,10 +73,6 @@ class ClipboardManager: ObservableObject {
     }
     
     // MARK: - Copy to Clipboard
-    
-        lastChangeCount = pasteboard.changeCount
-        ignoreNextClipboardChange = false
-    }
 
     /// 写入系统剪贴板，并忽略下一次监听回调，避免重复写入历史。
     func copyToClipboard(_ item: ClipItem) {
@@ -84,7 +80,7 @@ class ClipboardManager: ObservableObject {
 
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
-        
+
         switch item.type {
         case .text:
             pasteboard.setString(item.content, forType: .string)
@@ -96,6 +92,8 @@ class ClipboardManager: ObservableObject {
             let url = URL(fileURLWithPath: item.content)
             pasteboard.writeObjects([url as NSPasteboardWriting])
         }
+
+        lastChangeCount = pasteboard.changeCount
     }
 
     func copyAndPaste(_ item: ClipItem) {
