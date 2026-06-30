@@ -57,6 +57,30 @@ struct SettingsView: View {
                         .foregroundColor(.secondary)
                 }
                 
+                Section("权限") {
+                    HStack {
+                        Text("辅助功能")
+                        Spacer()
+                        if PasteSimulator.isAccessibilityTrusted {
+                            Label("已授权", systemImage: "checkmark.circle.fill")
+                                .foregroundColor(.green)
+                        } else {
+                            Label("未授权", systemImage: "exclamationmark.triangle.fill")
+                                .foregroundColor(.orange)
+                        }
+                    }
+
+                    if !PasteSimulator.isAccessibilityTrusted {
+                        Text("「选中即粘贴」需要辅助功能权限，用于将内容粘贴到光标处。未授权时只会复制到剪贴板。")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+
+                        Button("打开系统设置…") {
+                            PasteSimulator.openAccessibilitySettings()
+                        }
+                    }
+                }
+
                 Section("通用") {
                     HotkeyRecorderView()
 

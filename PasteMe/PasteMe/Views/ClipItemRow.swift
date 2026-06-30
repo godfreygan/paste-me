@@ -5,24 +5,24 @@ struct ClipItemRow: View {
     let onCopy: () -> Void
     let onPin: () -> Void
     let onDelete: () -> Void
-    
+
+    private static let actionButtonWidth: CGFloat = 52
+
     @State private var isHovered = false
-    
+
     var body: some View {
         HStack(spacing: 10) {
-            // Type icon
             Image(systemName: item.type.icon)
                 .font(.system(size: 14))
                 .foregroundColor(.secondary)
                 .frame(width: 20)
-            
-            // Content
+
             VStack(alignment: .leading, spacing: 2) {
                 Text(item.displayContent)
                     .font(.system(size: 13))
                     .lineLimit(2)
                     .foregroundColor(.primary)
-                
+
                 HStack(spacing: 4) {
                     if item.isPinned {
                         Image(systemName: "pin.fill")
@@ -34,28 +34,28 @@ struct ClipItemRow: View {
                         .foregroundColor(.secondary)
                 }
             }
-            
-            Spacer()
-            
-            // Action buttons (shown on hover)
-            if isHovered {
-                HStack(spacing: 4) {
-                    Button(action: onPin) {
-                        Image(systemName: item.isPinned ? "pin.slash" : "pin")
-                            .font(.system(size: 12))
-                    }
-                    .buttonStyle(.plain)
-                    .help(item.isPinned ? "取消置顶" : "置顶")
-                    
-                    Button(action: onDelete) {
-                        Image(systemName: "trash")
-                            .font(.system(size: 12))
-                            .foregroundColor(.red)
-                    }
-                    .buttonStyle(.plain)
-                    .help("删除")
+
+            Spacer(minLength: 0)
+
+            HStack(spacing: 4) {
+                Button(action: onPin) {
+                    Image(systemName: item.isPinned ? "pin.slash" : "pin")
+                        .font(.system(size: 12))
                 }
+                .buttonStyle(.plain)
+                .help(item.isPinned ? "取消置顶" : "置顶")
+
+                Button(action: onDelete) {
+                    Image(systemName: "trash")
+                        .font(.system(size: 12))
+                        .foregroundColor(.red)
+                }
+                .buttonStyle(.plain)
+                .help("删除")
             }
+            .frame(width: Self.actionButtonWidth, alignment: .trailing)
+            .opacity(isHovered ? 1 : 0)
+            .allowsHitTesting(isHovered)
         }
         .padding(.vertical, 6)
         .padding(.horizontal, 8)

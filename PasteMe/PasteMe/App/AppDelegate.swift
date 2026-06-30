@@ -118,7 +118,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func openSettings() {
         closePopover()
-        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+        QuickAccessWindowController.shared.hide()
+        NotificationCenter.default.post(name: .openPasteMeSettings, object: nil)
     }
 
     @objc private func quitApp() {
