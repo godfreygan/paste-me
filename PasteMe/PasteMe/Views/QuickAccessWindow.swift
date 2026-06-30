@@ -168,7 +168,9 @@ class QuickAccessWindowController {
 
     private func selectItem(_ item: ClipItem) {
         hide()
-        ClipboardManager.shared.copyAndPaste(item)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            ClipboardManager.shared.copyAndPaste(item)
+        }
     }
 }
 

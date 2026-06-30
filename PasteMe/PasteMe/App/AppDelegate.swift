@@ -1,11 +1,11 @@
 import AppKit
 import SwiftUI
 
-class AppDelegate: NSObject, NSApplicationDelegate {
+class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var statusItem: NSStatusItem!
     private var popover: NSPopover!
     private var contextMenu: NSMenu!
-    private let clipboardManager = ClipboardManager.shared
+    private var settingsWindow: NSWindow?
     private let hotkeyManager = HotkeyManager.shared
     
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -20,7 +20,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         setupPopover()
         setupHotkey()
         
-        // Ensure app runs as menu bar only (no dock icon)
         NSApp.setActivationPolicy(.accessory)
     }
     
@@ -56,8 +55,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         popover.animates = true
         popover.contentViewController = NSHostingController(
             rootView: MenuBarView(onPaste: { [weak self] item in
-                self?.closePopover()
-                ClipboardManager.shared.copyAndPaste(item)
+                self?.pasteFromMenuBar(item)
             })
         )
     }
@@ -67,6 +65,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self?.showQuickAccess()
         }
         hotkeyManager.registerFromSettings()
+    }
+
+    private func pasteFromMenuBar(_ item: ClipItem) {
+        closePopover()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            ClipboardManager.shared.copyAndPaste(item)
+        }
     }
 
     @objc private func statusItemClicked(_ sender: NSStatusBarButton) {
@@ -100,10 +105,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             PasteSimulator.rememberTargetApp()
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
             
-            // Activate app to receive keyboard events
             NSApp.activate(ignoringOtherApps: true)
             
-            // Focus the search field
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 if let window = self.popover.contentViewController?.view.window {
                     window.makeKey()
@@ -117,18 +120,39 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func openSettings() {
+        contextMenu.cancelTracking()
         closePopover()
         QuickAccessWindowController.shared.hide()
-        NotificationCenter.default.post(name: .openPasteMeSettings, object: nil)
+
+        if settingsWindow == nil {
+            let hosting = NSHostingController(rootView: SettingsView())
+            let window = NSWindow(contentViewController: hosting)
+            window.title = "PasteMe 设置"
+            window.styleMask = [.titled, .closable]
+            window.isReleasedWhenClosed = false
+            window.delegate = self
+            window.center()
+            settingsWindow = window
+        }
+
+        NSApp.setActivationPolicy(.regular)
+        NSApp.activate(ignoringOtherApps: true)
+        settingsWindow?.makeKeyAndOrderFront(nil)
     }
 
     @objc private func quitApp() {
+        contextMenu.cancelTracking()
         closePopover()
+        QuickAccessWindowController.shared.hide()
         NSApp.terminate(nil)
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        guard let window = notification.object as? NSWindow, window === settingsWindow else { return }
+        NSApp.setActivationPolicy(.accessory)
     }
     
     private func showQuickAccess() {
-        // Close popover if shown
         if popover.isShown {
             closePopover()
         }

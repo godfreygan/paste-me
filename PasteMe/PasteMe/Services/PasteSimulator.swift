@@ -3,8 +3,9 @@ import ApplicationServices
 
 enum PasteSimulator {
     private static let commandVKeyCode: CGKeyCode = 9
-    private static let activationDelay: TimeInterval = 0.28
-    private static let pasteKeystrokeDelay: TimeInterval = 0.06
+    private static let uiSettleDelay: TimeInterval = 0.12
+    private static let activationDelay: TimeInterval = 0.22
+    private static let pasteKeystrokeDelay: TimeInterval = 0.08
 
     private static var targetApp: NSRunningApplication?
 
@@ -16,27 +17,34 @@ enum PasteSimulator {
         }
     }
 
-    /// Hide PasteMe, restore target-app focus, write clipboard, then simulate ⌘V.
+    /// Close UI first, restore target-app focus, write clipboard, then simulate ⌘V.
     static func performPaste(copyAction: @escaping () -> Void) {
+        DispatchQueue.main.async {
+            performPasteOnMain(copyAction: copyAction)
+        }
+    }
+
+    private static func performPasteOnMain(copyAction: @escaping () -> Void) {
         guard AXIsProcessTrusted() else {
             copyAction()
             promptForAccessibility()
             return
         }
 
-        NSApp.hide(nil)
-
         let appToActivate = targetApp
-        appToActivate?.activate(options: [.activateIgnoringOtherApps])
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + activationDelay) {
-            copyAction()
+        DispatchQueue.main.asyncAfter(deadline: .now() + uiSettleDelay) {
+            appToActivate?.activate(options: [.activateIgnoringOtherApps])
 
-            DispatchQueue.main.asyncAfter(deadline: .now() + pasteKeystrokeDelay) {
-                if simulateCommandV() {
-                    return
+            DispatchQueue.main.asyncAfter(deadline: .now() + activationDelay) {
+                copyAction()
+
+                DispatchQueue.main.asyncAfter(deadline: .now() + pasteKeystrokeDelay) {
+                    if !simulateCommandV() {
+                        pasteViaAppleScript()
+                    }
+                    targetApp = nil
                 }
-                pasteViaAppleScript()
             }
         }
     }
@@ -51,7 +59,6 @@ enum PasteSimulator {
     }
 
     static func openAccessibilitySettings() {
-        promptForAccessibility()
         if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
             NSWorkspace.shared.open(url)
         }

@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 struct SettingsView: View {
     @ObservedObject private var storage = StorageManager.shared
@@ -27,7 +28,7 @@ struct SettingsView: View {
                     .fontWeight(.semibold)
                 Spacer()
                 Button("完成") {
-                    dismiss()
+                    closeSettingsWindow()
                 }
                 .buttonStyle(.borderedProminent)
             }
@@ -120,6 +121,14 @@ struct SettingsView: View {
             if let count = Int(maxHistoryText) {
                 storage.updateMaxHistoryCount(count)
             }
+        }
+    }
+
+    private func closeSettingsWindow() {
+        if let window = NSApp.windows.first(where: { $0.title == "PasteMe 设置" }) {
+            window.close()
+        } else {
+            dismiss()
         }
     }
 }

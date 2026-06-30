@@ -6,7 +6,8 @@ struct ClipItemRow: View {
     let onPin: () -> Void
     let onDelete: () -> Void
 
-    private static let actionButtonWidth: CGFloat = 52
+    /// Fixed width for pin + delete icons so hover does not reflow text.
+    private static let actionButtonWidth: CGFloat = 36
 
     @State private var isHovered = false
 
@@ -62,9 +63,7 @@ struct ClipItemRow: View {
         .background(isHovered ? Color.accentColor.opacity(0.1) : Color.clear)
         .cornerRadius(6)
         .onHover { hovering in
-            withAnimation(.easeInOut(duration: 0.15)) {
-                isHovered = hovering
-            }
+            isHovered = hovering
         }
         .onTapGesture {
             onCopy()
