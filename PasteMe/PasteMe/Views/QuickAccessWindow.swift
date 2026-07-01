@@ -182,17 +182,20 @@ private final class QuickAccessKeyMonitor {
     private let itemProvider: () -> [ClipItem]
     private let onDismiss: () -> Void
     private let onSelect: (ClipItem) -> Void
+    private let onKeyboardNavigate: () -> Void
 
     init(
         selectedIndex: Binding<Int>,
         itemProvider: @escaping () -> [ClipItem],
         onDismiss: @escaping () -> Void,
-        onSelect: @escaping (ClipItem) -> Void
+        onSelect: @escaping (ClipItem) -> Void,
+        onKeyboardNavigate: @escaping () -> Void
     ) {
         self.selectedIndex = selectedIndex
         self.itemProvider = itemProvider
         self.onDismiss = onDismiss
         self.onSelect = onSelect
+        self.onKeyboardNavigate = onKeyboardNavigate
     }
 
     func start() {
@@ -207,6 +210,7 @@ private final class QuickAccessKeyMonitor {
             case 126:
                 DispatchQueue.main.async {
                     if self.selectedIndex.wrappedValue > 0 {
+                        self.onKeyboardNavigate()
                         self.selectedIndex.wrappedValue -= 1
                     }
                 }
@@ -214,6 +218,7 @@ private final class QuickAccessKeyMonitor {
             case 125:
                 DispatchQueue.main.async {
                     if self.selectedIndex.wrappedValue < items.count - 1 {
+                        self.onKeyboardNavigate()
                         self.selectedIndex.wrappedValue += 1
                     }
                 }
@@ -244,6 +249,7 @@ private final class QuickAccessKeyMonitor {
 struct QuickAccessView: View {
     @ObservedObject private var storage = StorageManager.shared
     @State private var selectedIndex = 0
+    @State private var scrollSelectionIntoView = false
     @State private var keyMonitor: QuickAccessKeyMonitor?
     var onDismiss: () -> Void
     var onSelect: (ClipItem) -> Void
@@ -278,6 +284,8 @@ struct QuickAccessView: View {
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
             .onChange(of: selectedIndex) { _, newIndex in
+                guard scrollSelectionIntoView else { return }
+                scrollSelectionIntoView = false
                 withAnimation {
                     proxy.scrollTo(newIndex, anchor: .center)
                 }
@@ -290,7 +298,8 @@ struct QuickAccessView: View {
                 selectedIndex: $selectedIndex,
                 itemProvider: { storage.clips },
                 onDismiss: onDismiss,
-                onSelect: onSelect
+                onSelect: onSelect,
+                onKeyboardNavigate: { scrollSelectionIntoView = true }
             )
             monitor.start()
             keyMonitor = monitor
