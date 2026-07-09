@@ -15,9 +15,13 @@ class ClipboardManager: ObservableObject {
     }
     
     func startMonitoring() {
-        timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+        timer?.invalidate()
+        let newTimer = Timer(timeInterval: 0.5, repeats: true) { [weak self] _ in
             self?.checkForChanges()
         }
+        // .common keeps polling while the user interacts with other apps (menu bar apps).
+        RunLoop.main.add(newTimer, forMode: .common)
+        timer = newTimer
     }
     
     func stopMonitoring() {
@@ -39,14 +43,28 @@ class ClipboardManager: ObservableObject {
 
         lastChangeCount = currentChangeCount
         
-        // Read content from pasteboard
         if let image = pasteboard.readObjects(forClasses: [NSImage.self], options: nil)?.first as? NSImage {
             handleImage(image)
         } else if let urls = pasteboard.readObjects(forClasses: [NSURL.self], options: nil) as? [URL], !urls.isEmpty {
             handleFiles(urls)
-        } else if let string = pasteboard.string(forType: .string), !string.isEmpty {
+        } else if let string = readText(from: pasteboard) {
             handleText(string)
         }
+    }
+
+    private func readText(from pasteboard: NSPasteboard) -> String? {
+        let types: [NSPasteboard.PasteboardType] = [
+            .string,
+            NSPasteboard.PasteboardType("public.utf8-plain-text"),
+            NSPasteboard.PasteboardType("public.plain-text"),
+            NSPasteboard.PasteboardType("NSStringPboardType"),
+        ]
+        for type in types {
+            if let string = pasteboard.string(forType: type), !string.isEmpty {
+                return string
+            }
+        }
+        return nil
     }
     
     private func handleText(_ text: String) {

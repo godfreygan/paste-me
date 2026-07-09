@@ -19,6 +19,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         setupContextMenu()
         setupPopover()
         setupHotkey()
+
+        // Start clipboard monitoring at launch (singleton is lazy — not referenced by UI alone).
+        _ = ClipboardManager.shared
         
         NSApp.setActivationPolicy(.accessory)
     }
